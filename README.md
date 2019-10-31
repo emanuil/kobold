@@ -5,16 +5,16 @@ Kobold is a NodeJS proof of concept command line tool to automatically scans all
 - Download/Checkout Kobold's source
 - Run: `npm install` from within Kobold's directory
 
-####Usage 
+#### Usage 
 `node ./check_data.js [host] [database] [username] [password]`
 
 
-####Customization
+#### Customization
 To exclude individual tables from the scan, add them to the array in `getTablesToIgnore()` function in `configuration.js` file.
 
 To enable/disable individual checks on specific columns, add/remove them from `getCustomColumnChecks()` in `configuration.js` file.
 
 
-####Sample Result
+#### Sample Result
 
 ![alt text](documentation/results_screenshot.png "Sample Result")
