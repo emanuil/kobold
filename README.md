@@ -6,7 +6,7 @@ Kobold is a NodeJS proof of concept command line tool to automatically scans all
 - Run: `npm install` from within Kobold's directory
 
 #### Usage 
-`node ./check_data.js [host] [database] [username] [password]`
+`node ./check_data.js [host] [port] [database] [username] [password] [relative_configuration_file_path]`
 
 
 #### Customization
