@@ -1,6 +1,5 @@
 var mysql = require('mysql');
 
-var configuration = require('./configuration');
 var stringChecks = require('./stringChecks.js');
 var numberChecks = require('./numberChecks.js');
 var dateChecks = require('./dateChecks.js');
@@ -9,22 +8,25 @@ var dateChecks = require('./dateChecks.js');
 var arguments = process.argv.slice(2);
 
 
-if(arguments.length !== 4) {
-    console.log("Usage: node ./check_data.js [host] [database] [username] [password]");
+if(arguments.length !== 6) {
+    console.log("Usage: node ./check_data.js [host] [port] [database] [username] [password] [relative_configuration_file_path]");
     process.exit(0);
 }
 
+var configuration = require(__dirname  + '/' + arguments[5]);
 
 var pool  = mysql.createPool({
     connectionLimit: 10,
     host: arguments[0],
-    database: arguments[1],
-    user: arguments[2],
-    password: arguments[3]
+    port: arguments[1],
+    database: arguments[2],
+    user: arguments[3],
+    password: arguments[4]
 });
 
 
-configuration.setDatabaseName(arguments[1]);
+configuration.setDatabaseName(arguments[2]);
+stringChecks.setDatabaseName(arguments[2]);
 
 var operationsToComplete = 0;
 var operationsCompleted = 0;
@@ -58,8 +60,7 @@ function getAllTableNames() {
         operationsCompleted += 1;
 
         results.map(function(result) {
-            var tableName = result.Tables_in_apps;
-
+            var tableName = result['Tables_in_' + configuration.getDatabaseName()];
 
             if(configuration.getTablesToIgnore().indexOf(tableName) === -1) {
                 schemaTree[tableName] = {};
@@ -88,7 +89,7 @@ function getAllTableColumnName(tableName) {
             var columnType = result.Type.split('(')[0];
 
 
-            if(columnType === 'varchar' || columnType === 'text') {
+            if(columnType === 'varchar' || columnType === 'text' || columnType === 'json') {
                 scanAStringColumn(tableName, columnName, defineStringChecksToRun(tableName, columnName, 'string'));
             }
 
@@ -126,7 +127,7 @@ function defineStringChecksToRun(tableName, columnName, type) {
     var checksToRun;
 
 
-    if(type === 'string') {
+    if(type === 'string' || type == 'json') {
         checksToRun = regularStringChecks;
     }
 

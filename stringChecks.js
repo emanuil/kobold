@@ -1,5 +1,10 @@
 var async = require('async');
-var configuration = require('./configuration');
+
+var databaseName;
+
+function setDatabaseName(name) {
+    databaseName = name;
+}
 
 
 function stringEqualToNull(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
@@ -64,7 +69,7 @@ function stringTrimmed(pool, tableName, columnName, increaseOperationsToComplete
     increaseOperationsToComplete();
 
     // get the column capacity
-    pool.query("SELECT CHARACTER_MAXIMUM_LENGTH AS columnCapacity from information_schema.columns where table_schema = '" + configuration.getDatabaseName() + "' AND table_name = '" + tableName + "' AND COLUMN_NAME = '" + columnName + "'", function (error, results) {
+    pool.query("SELECT CHARACTER_MAXIMUM_LENGTH AS columnCapacity from information_schema.columns where table_schema = '" + databaseName + "' AND table_name = '" + tableName + "' AND COLUMN_NAME = '" + columnName + "'", function (error, results) {
         if (error) {
             throw(error);
         }
@@ -159,6 +164,28 @@ function stringIsNotAnObject(pool, tableName, columnName, increaseOperationsToCo
     });
 }
 
+function stringIsAnEmptyObject(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
+
+    increaseOperationsToComplete();
+
+    pool.query("SELECT id," + columnName + " as data from " + tableName, function (error, results) {
+        if (error) {
+            throw error;
+        }
+
+        increaseOperationsCompleted();
+
+        results.map(function(result) {
+
+            var parsedObject = JSON.parse(result.data);
+
+            if(Object.keys(parsedObject).length === 0) {
+                console.log('String is an empty object in ' + tableName + ' table, column: ' + columnName + ' with id: ' + result.id);
+            }
+        });
+    });
+}
+
 function stringIsNotArray(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
 
     increaseOperationsToComplete();
@@ -179,6 +206,92 @@ function stringIsNotArray(pool, tableName, columnName, increaseOperationsToCompl
         });
     });
 }
+
+
+function stringIsEmptyArray(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
+
+    increaseOperationsToComplete();
+
+    pool.query("SELECT " + columnName + " as data from " + tableName, function (error, results) {
+        if (error) {
+            throw error;
+        }
+
+        increaseOperationsCompleted();
+
+        results.map(function(result) {
+            var parsedObject = JSON.parse(result.data);
+
+            if(parsedObject.length === 0) {
+                console.log('String is an empty array in ' + tableName + ' table, column: ' + columnName);
+            }
+        });
+    });
+}
+
+
+function stringArrayContainsNullElements(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
+
+    increaseOperationsToComplete();
+
+    pool.query("SELECT id," + columnName + " as data from " + tableName, function (error, results) {
+        if (error) {
+            throw error;
+        }
+
+        increaseOperationsCompleted();
+
+        results.map(function(result) {
+
+            var parsedObject = JSON.parse(result.data);
+
+            var flag = false;
+            parsedObject.map(function(element) {
+
+                if(element === null) {
+                    flag = true;
+                }
+            });
+
+            if(flag) {
+                console.log('Element in an array in ' + tableName + ' table, column: ' + columnName + ' is NULL with id: ' + result.id);
+            }
+        });
+    });
+}
+
+
+function stringArrayContainsEmptyElements(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
+
+    increaseOperationsToComplete();
+
+    pool.query("SELECT id," + columnName + " as data from " + tableName, function (error, results) {
+        if (error) {
+            throw error;
+        }
+
+        increaseOperationsCompleted();
+
+        results.map(function(result) {
+
+            var parsedObject = JSON.parse(result.data);
+
+            var flag = false;
+            parsedObject.map(function(element) {
+
+                if(Object.keys(element).length === 0) {
+                    flag = true;
+                }
+            });
+
+            if(flag) {
+                console.log('Element in an array in ' + tableName + ' table, column: ' + columnName + ' is EMPTY with id: ' + result.id);
+            }
+        });
+    });
+}
+
+
 
 function stringIsNotInstagramLink(pool, tableName, columnName, increaseOperationsToComplete, increaseOperationsCompleted) {
 
@@ -250,4 +363,11 @@ module.exports.stringIsNotAnObject = stringIsNotAnObject;
 module.exports.stringIsNotArray = stringIsNotArray;
 module.exports.stringIsNotInstagramLink = stringIsNotInstagramLink;
 module.exports.stringIsNotURL = stringIsNotURL;
+module.exports.stringArrayContainsNullElements = stringArrayContainsNullElements;
+module.exports.stringIsEmptyArray = stringIsEmptyArray;
+module.exports.stringArrayContainsEmptyElements = stringArrayContainsEmptyElements;
+module.exports.stringIsAnEmptyObject = stringIsAnEmptyObject;
+
+
+module.exports.setDatabaseName = setDatabaseName;
 
